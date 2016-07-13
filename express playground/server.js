@@ -1,27 +1,3 @@
-// var http = require("http");
-// var url = require("url");
-
-// function start (route, handle) {
-// 	function onRequest(request, response) {
-// 		var pathname = url.parse(request.url).pathname;
-// 		console.log("PathName: " + pathname);
-// 		route(handle, pathname, response, request);
-// 	}
-	
-// 	http.createServer(onRequest).listen(8888);
-// 	console.log("Server has Started");
-// }
-
-// exports.start = start;
-
-
-
-
-
-
-
-
-
 var express = require("express");
 var app = express();
 var fs = require("fs");
@@ -37,23 +13,13 @@ var user = {
 
 app.use(express.static('public'));
 
+//directory
 app.get('/', function(request, response) { 
-	response.send("Hello World");
+	response.sendFile(__dirname + '/index.html');
 });
 
-app.get('/index.html', function(request, response) {
-	response.sendFile(__dirname + "/" + "index.html");
-});
 
-app.get('/process_get', function(request, response) {
-	res = {
-		first_name:request.query.first_name,
-		last_name:request.query.last_name
-	};
-	console.log(res);
-	response.end(JSON.stringify(res));
-});
-
+//listing users
 app.get('/listUsers', function(req, res) {
 	fs.readFile(__dirname + "/" + "users.json", "utf8", function(err, data) {
 		console.log(data);
@@ -61,16 +27,7 @@ app.get('/listUsers', function(req, res) {
 	})
 });
 
-// app.get('/adduser', function(req, res) {
-// 	fs.readFile(__dirname + '/' + 'users.json', 'utf8', function(err, data) {
-// 		data = JSON.parse(data);
-// 		data['user4'] = user['user4'];
-// 		console.log(data);
-// 		res.end(JSON.stringify(data));
-// 	});
-// });
-
-
+//addng users
 app.get('/addUser', function(req, res) {
 	res.sendFile(__dirname + '/' + "addUser.html");
 });
@@ -83,26 +40,61 @@ app.get('/user_post', function(req, res) {
 		profesion:req.query.profession,
 		id:req.query.id
 	};
-
 	fs.readFile(__dirname + '/' + 'users.json', 'utf8', function(err, data) {
 		data = JSON.parse(data);
-		// data['user' + response.id] = response;
-		data['user5'] = response;
+		console.log("balls" + JSON.stringify(data));
+		data['user' + response.id] = response;
+		console.log("\nballs2" + JSON.stringify(data));
+
+		fs.writeFile(__dirname + '/' + "users.json", JSON.stringify(data), function(err) {
+			if (err) console.log(err.stack);
+			console.log("Success Writing to JSON File");
+			res.writeHead(302, {'location': '/listUsers'});
+			res.end();
+		})
 		console.log(data);
-		// res.end(JSON.stringify(data));
 	});
 	console.log(response);
-	res.end(JSON.stringify(response));
 });
 
 
+//deleting users
+app.get('/deleteUser', function(req, res) {
+	res.sendFile(__dirname + '/deleteUser.html');
+});
 
+app.get('/user_delete', function(req, res) {
+	fs.readFile(__dirname + '/users.json', 'utf8', function(err, data) {
+		val = req.query.value;
+		console.log("value: " + val);
+		data = JSON.parse(data);
+		console.log("Data: " + data);
+		delete data['user' +  val];
+		fs.writeFile(__dirname + '/users.json', JSON.stringify(data), function (err, data) {
+			if (err) {
+				console.log(err.stack);
+				// res.end("error writing to file");
+			}
+			res.sendFile(__dirname + '/users.json');
+		});
 
+		console.log("Data: " + data);
+	});
+});
 
+//view user
+app.get('/:id', function(req, res) {
+	fs.readFile(__dirname + '/users.json', 'utf8', function(err, data) {
+		users = JSON.parse(data);
+		var user = users['user' + req.params.id];
+		console.log(user);
+		res.end(JSON.stringify(user));
+	});
+});
 
 var server = app.listen(8081, function() {
 	var host = server.address().address;
 	var port = server.address().port;
-	console.log("listening at http://%s:%s", host, port);
+	console.log("listening at http://%s%s", host, port);
 });
 
