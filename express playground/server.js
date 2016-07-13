@@ -1,6 +1,8 @@
 var express = require("express");
 var app = express();
 var fs = require("fs");
+var MongoClient = require('mongodb').MongoClient;
+
 
 var user = {
 	"user4" : {
@@ -91,6 +93,14 @@ app.get('/:id', function(req, res) {
 		res.end(JSON.stringify(user));
 	});
 });
+
+
+app.get('/server', function(req, res) {
+	mongoClient.connect("mongodb://localhost:27017/local", function(err, db) {
+		if (err) console.log(err.stack);
+		console.log("boom bam");
+	})
+})
 
 var server = app.listen(8081, function() {
 	var host = server.address().address;
